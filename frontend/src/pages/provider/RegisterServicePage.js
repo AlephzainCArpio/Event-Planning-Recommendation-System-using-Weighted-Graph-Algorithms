@@ -1,10 +1,25 @@
 import React from 'react';
-import { Form, Input, InputNumber, Select, Upload } from 'antd';
+import { Form, Input, InputNumber, Select, Upload, Button } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import { PlusOutlined } from '@ant-design/icons';
 import { submitServiceData } from '../../services/api';
 
 const { Option } = Select;
+
+const normFile = (e) => {
+  if (Array.isArray(e)) return e;
+  return e?.fileList;
+};
+
+const appendImages = (formData, images) => {
+  if (images && Array.isArray(images)) {
+    images.forEach((fileObj) => {
+      if (fileObj.originFileObj) {
+        formData.append('images', fileObj.originFileObj);
+      }
+    });
+  }
+};
 
 const RegisterServicePage = () => {
   const { currentUser } = useAuth();
@@ -70,11 +85,6 @@ const VenueForm = () => {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const normFile = (e) => {
-    if (Array.isArray(e)) return e;
-    return e?.fileList;
   };
 
   return (
@@ -162,9 +172,9 @@ const VenueForm = () => {
         </Upload>
       </Form.Item>
       <Form.Item>
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Registering..." : "Register Venue"}
-        </button>
+        <Button type="primary" htmlType="submit" loading={submitting}>
+          Register Venue
+        </Button>
       </Form.Item>
     </Form>
   );
@@ -172,8 +182,36 @@ const VenueForm = () => {
 
 // Catering form 
 const CateringForm = () => {
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const handleFinish = async (values) => {
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('serviceType', 'CATERING');
+      formData.append('name', values.name);
+      formData.append('description', values.description);
+      formData.append('location', values.location);
+      formData.append('maxPeople', values.maxPeople);
+      formData.append('pricePerPerson', values.pricePerPerson);
+      formData.append('cuisineType', values.cuisineType);
+      if (values.dietaryOptions) {
+        values.dietaryOptions.forEach((option) => formData.append('dietaryOptions', option));
+      }
+      appendImages(formData, values.images);
+      await submitServiceData(formData);
+      window.alert('Catering registered successfully!');
+      form.resetFields();
+    } catch (error) {
+      window.alert(error.response?.data?.message || 'Error registering catering.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <Form layout="vertical">
+    <Form form={form} layout="vertical" onFinish={handleFinish}>
       <Form.Item
         name="name"
         label="Catering Name"
@@ -232,7 +270,8 @@ const CateringForm = () => {
         name="images"
         label="Images"
         valuePropName="fileList"
-        getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+        getValueFromEvent={normFile}
+        rules={[{ required: true, message: 'Please upload at least one image' }]}
       >
         <Upload
           listType="picture-card"
@@ -248,7 +287,9 @@ const CateringForm = () => {
         </Upload>
       </Form.Item>
       <Form.Item>
-        <button type="submit">Register Catering</button>
+        <Button type="primary" htmlType="submit" loading={submitting}>
+          Register Catering
+        </Button>
       </Form.Item>
     </Form>
   );
@@ -256,8 +297,35 @@ const CateringForm = () => {
 
 // Photographer form
 const PhotographerForm = () => {
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const handleFinish = async (values) => {
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('serviceType', 'PHOTOGRAPHER');
+      formData.append('name', values.name);
+      formData.append('description', values.description);
+      formData.append('location', values.location);
+      formData.append('style', values.style);
+      formData.append('experienceYears', values.experienceYears);
+      formData.append('priceRange', values.priceRange);
+      formData.append('copyType', values.copyType);
+      if (values.portfolio) formData.append('portfolio', values.portfolio);
+      appendImages(formData, values.images);
+      await submitServiceData(formData);
+      window.alert('Photographer registered successfully!');
+      form.resetFields();
+    } catch (error) {
+      window.alert(error.response?.data?.message || 'Error registering photographer.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <Form layout="vertical">
+    <Form form={form} layout="vertical" onFinish={handleFinish}>
       <Form.Item
         name="name"
         label="Photographer Name"
@@ -322,7 +390,8 @@ const PhotographerForm = () => {
         name="images"
         label="Images"
         valuePropName="fileList"
-        getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+        getValueFromEvent={normFile}
+        rules={[{ required: true, message: 'Please upload at least one image' }]}
       >
         <Upload
           listType="picture-card"
@@ -338,7 +407,9 @@ const PhotographerForm = () => {
         </Upload>
       </Form.Item>
       <Form.Item>
-        <button type="submit">Register Photographer</button>
+        <Button type="primary" htmlType="submit" loading={submitting}>
+          Register Photographer
+        </Button>
       </Form.Item>
     </Form>
   );
@@ -346,8 +417,34 @@ const PhotographerForm = () => {
 
 // Designer form
 const DesignerForm = () => {
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const handleFinish = async (values) => {
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('serviceType', 'DESIGNER');
+      formData.append('name', values.name);
+      formData.append('description', values.description);
+      formData.append('location', values.location);
+      formData.append('style', values.style);
+      formData.append('priceRange', values.priceRange);
+      if (values.eventTypes) formData.append('eventTypes', values.eventTypes);
+      if (values.portfolio) formData.append('portfolio', values.portfolio);
+      appendImages(formData, values.images);
+      await submitServiceData(formData);
+      window.alert('Designer registered successfully!');
+      form.resetFields();
+    } catch (error) {
+      window.alert(error.response?.data?.message || 'Error registering designer.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <Form layout="vertical">
+    <Form form={form} layout="vertical" onFinish={handleFinish}>
       <Form.Item
         name="name"
         label="Designer Name"
@@ -409,7 +506,8 @@ const DesignerForm = () => {
         name="images"
         label="Images"
         valuePropName="fileList"
-        getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+        getValueFromEvent={normFile}
+        rules={[{ required: true, message: 'Please upload at least one image' }]}
       >
         <Upload
           listType="picture-card"
@@ -425,7 +523,9 @@ const DesignerForm = () => {
         </Upload>
       </Form.Item>
       <Form.Item>
-        <button type="submit">Register Designer</button>
+        <Button type="primary" htmlType="submit" loading={submitting}>
+          Register Designer
+        </Button>
       </Form.Item>
     </Form>
   );
