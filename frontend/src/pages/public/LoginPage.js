@@ -25,8 +25,9 @@ const LoginPage = () => {
       }
 
       // Prevent login if provider is pending
-      if (user.role === "PROVIDER" && user.status === "pending") {
+      if (user.role === "PROVIDER" && user.providerStatus === "PENDING") {
         message.error("Your account is still pending approval. Please wait for an administrator to approve your account.");
+        localStorage.removeItem("token");
         return;
       }
 
