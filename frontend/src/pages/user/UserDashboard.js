@@ -79,13 +79,13 @@ const UserDashboard = () => {
   const getServiceUrl = (type, id) => {
     switch (type) {
       case "venue":
-        return `/api/user/venues/${id}`;
+        return `/user/venues/${id}`;
       case "catering":
-        return `/api/user/catering/${id}`;
+        return `/user/catering/${id}`;
       case "photographer":
-        return `/api/user/photographers/${id}`;
+        return `/user/photographers/${id}`;
       case "designer":
-        return `/api/user/designers/${id}`;
+        return `/user/designers/${id}`;
       default:
         return "#";
     }
