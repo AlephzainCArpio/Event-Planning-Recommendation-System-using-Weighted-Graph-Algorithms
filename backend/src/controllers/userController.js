@@ -40,6 +40,24 @@ const getViewHistory = async (req, res) => {
   }
 };
 
+const deleteViewHistoryEntry = async (req, res) => {
+  try {
+    const entry = await prisma.viewHistory.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!entry || entry.userId !== req.user.id) {
+      return res.status(404).json({ message: "View history entry not found" });
+    }
+
+    await prisma.viewHistory.delete({ where: { id: req.params.id } });
+    res.json({ message: "View history entry deleted" });
+  } catch (error) {
+    console.error("Error in deleteViewHistoryEntry:", error);
+    res.status(500).json({ message: "Internal Server Error", details: error.message });
+  }
+};
+
 const getDashboard = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -95,5 +113,6 @@ module.exports = {
   getProfile,
   updateProfile,
   getViewHistory,
+  deleteViewHistoryEntry,
   getDashboard,
 };
