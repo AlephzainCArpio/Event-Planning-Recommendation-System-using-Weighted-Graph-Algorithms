@@ -1,6 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { uniqueUploadFilename } = require('../utils/uploadFilename');
 
 const createUploadDir = (folder) => {
   const baseUploadDir = path.join(__dirname, '../../uploads');
@@ -17,9 +18,7 @@ const storage = (folder) => multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${uniqueSuffix}${ext}`);
+    cb(null, uniqueUploadFilename(file.originalname));
   }
 });
 

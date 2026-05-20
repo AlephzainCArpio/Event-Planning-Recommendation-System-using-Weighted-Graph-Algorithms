@@ -34,7 +34,11 @@ const ProviderManagementPage = () => {
     try {
       setDocumentLoading(true)
       setViewingProvider(provider)
-      setDocumentUrl(`${api.defaults.baseURL}/uploads/verification/${provider.verificationDoc}`)
+      const response = await api.get(`/api/admin/verification-document/${provider.id}`, {
+        responseType: "blob",
+      })
+      const blobUrl = URL.createObjectURL(response.data)
+      setDocumentUrl(blobUrl)
       setDocumentVisible(true)
     } catch (error) {
       message.error("Failed to load document")
@@ -174,7 +178,11 @@ const ProviderManagementPage = () => {
       <Modal
         title={`Verification Document - ${viewingProvider?.name}`}
         open={documentVisible}
-        onCancel={() => setDocumentVisible(false)}
+        onCancel={() => {
+          if (documentUrl) URL.revokeObjectURL(documentUrl)
+          setDocumentUrl("")
+          setDocumentVisible(false)
+        }}
         footer={[
           <Button key="close" onClick={() => setDocumentVisible(false)}>
             Close

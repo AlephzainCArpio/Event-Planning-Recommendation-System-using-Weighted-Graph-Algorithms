@@ -1,5 +1,5 @@
 const express = require("express");
-const { getProfile, updateProfile, getViewHistory, getDashboard } = require("../controllers/userController");
+const { getProfile, updateProfile, getViewHistory, deleteViewHistoryEntry, getDashboard } = require("../controllers/userController");
 const favoriteController = require("../controllers/favoriteController");
 const { protect } = require("../middlewares/authMiddleware");
 
@@ -9,6 +9,7 @@ const router = express.Router();
 router.get("/profile", protect, getProfile);
 router.put("/profile", protect, updateProfile);
 router.get("/history", protect, getViewHistory);
+router.delete("/history/:id", protect, deleteViewHistoryEntry);
 router.get("/dashboard", protect, getDashboard);
 
 // Favorites routes

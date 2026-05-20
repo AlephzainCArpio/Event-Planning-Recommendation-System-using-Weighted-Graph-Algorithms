@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const path = require("path");
+const { uniqueUploadFilename } = require("../utils/uploadFilename");
 const {
   getPhotographers,
   getPhotographerById,
@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/photographers/');
   },
   filename: function (req, file, cb) {
-    cb(null, `photographer-${Date.now()}${path.extname(file.originalname)}`);
+    cb(null, uniqueUploadFilename(file.originalname));
   }
 });
 

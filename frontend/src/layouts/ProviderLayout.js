@@ -70,8 +70,8 @@ const ProviderLayout = ({ children }) => {
           <Menu.Item key="/provider/dashboard" icon={<DashboardOutlined />}>
             <Link to="/provider">Dashboard</Link>
           </Menu.Item>
-          <Menu.Item key="/provider/services" icon={<ProfileOutlined />}>
-            <Link to="/provider/register-service">Manage Services</Link>
+          <Menu.Item key="/provider/register-service" icon={<ProfileOutlined />}>
+            <Link to="/provider/register-service">Add Service</Link>
           </Menu.Item>
         </Menu>
       </Sider>

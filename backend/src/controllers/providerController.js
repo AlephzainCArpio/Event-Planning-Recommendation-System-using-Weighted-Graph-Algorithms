@@ -4,6 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { uniqueUploadFilename } = require('../utils/uploadFilename');
 const prisma = new PrismaClient();
 
 const generateToken = (id) => {
@@ -37,8 +38,7 @@ const storage = multer.diskStorage({
     cb(null, fullPath);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
+    cb(null, uniqueUploadFilename(file.originalname));
   },
 });
 const fileFilter = (req, file, cb) => {
@@ -84,7 +84,6 @@ const validateServiceData = (serviceData, serviceType) => {
       break;
     case 'DESIGNER':
       if (!serviceData.style || !['modern', 'classic', 'minimalist'].includes(serviceData.style)) throw new Error('Valid design style is required');
-      if (!serviceData.experienceYears || isNaN(serviceData.experienceYears)) throw new Error('Valid experience years are required');
       break;
     default:
       throw new Error('Invalid service type');
@@ -98,7 +97,6 @@ const register = async (req, res) => {
     if (userExists) return res.status(400).json({ message: "User already exists" });
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const verificationStatus = role === "PROVIDER" ? "PENDING_DOCUMENT" : "NOT_REQUIRED";
     const user = await prisma.user.create({
       data: {
         name,
@@ -106,8 +104,8 @@ const register = async (req, res) => {
         password: hashedPassword,
         role: role || "USER",
         phone,
-        serviceType: serviceType || null,
-        verificationStatus,
+        serviceType: role === "PROVIDER" ? serviceType || null : null,
+        providerStatus: role === "PROVIDER" ? "PENDING" : null,
         profile: { create: {} },
       },
     });
@@ -118,7 +116,8 @@ const register = async (req, res) => {
         email: user.email,
         role: user.role,
         serviceType: user.serviceType,
-        verificationStatus: user.verificationStatus,
+        providerStatus: user.providerStatus,
+        providerType: user.serviceType || null,
         token: generateToken(user.id),
       });
     } else {
@@ -140,7 +139,8 @@ const login = async (req, res) => {
         email: user.email,
         role: user.role,
         serviceType: user.serviceType,
-        verificationStatus: user.verificationStatus,
+        providerStatus: user.providerStatus,
+        providerType: user.serviceType || null,
         token: generateToken(user.id),
       });
     } else {
@@ -190,7 +190,7 @@ const registerService = async (req, res) => {
     }
 
     // Save images as JSON array of filenames
-    const imageFilenames = req.files.map(file => path.basename(file.path));
+    const imageFilenames = req.files.map(file => file.filename);
     const imagesField = JSON.stringify(imageFilenames);
 
     const processedData = { ...serviceData };
@@ -347,7 +347,8 @@ const getMe = async (req, res) => {
       email: user.email,
       role: user.role,
       serviceType: user.serviceType,
-      verificationStatus: user.verificationStatus,
+      providerStatus: user.providerStatus,
+      providerType: user.serviceType || null,
       profile: user.profile,
     });
   } catch (error) {

@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
 import { Table, Tag, Button, Card, message, Popconfirm, Modal, Typography, Spin } from "antd";
-import { EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
 
-const PendingServicesPage = () => {
+const DELETE_ENDPOINTS = {
+  VENUE: "/api/venues",
+  CATERING: "/api/catering",
+  PHOTOGRAPHER: "/api/photographers",
+  DESIGNER: "/api/designers",
+};
+
+const ProviderDashboard = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState(null);
@@ -24,7 +31,6 @@ const PendingServicesPage = () => {
     try {
       setLoading(true);
       const response = await api.get("/api/providers/services");
-      // Only show current provider's services that are not approved
       const pending = response.data.filter(
         (svc) =>
           svc.status &&
@@ -39,26 +45,13 @@ const PendingServicesPage = () => {
     }
   };
 
-  const handleDelete = async (id, serviceType) => {
+  const handleDelete = async (id, category) => {
     try {
-      let endpoint = "";
-      switch (serviceType) {
-        case "Venue":
-          endpoint = `/venues/${id}`;
-          break;
-        case "Catering":
-          endpoint = `/catering/${id}`;
-          break;
-        case "Photographer":
-          endpoint = `/photographers/${id}`;
-          break;
-        case "Designer":
-          endpoint = `/designers/${id}`;
-          break;
-        default:
-          throw new Error("Invalid service type");
+      const endpoint = DELETE_ENDPOINTS[category];
+      if (!endpoint) {
+        throw new Error("Invalid service type");
       }
-      await api.delete(endpoint);
+      await api.delete(`${endpoint}/${id}`);
       message.success("Service deleted successfully");
       fetchPendingServices();
     } catch (error) {
@@ -162,7 +155,7 @@ const PendingServicesPage = () => {
         <p>
           <strong>Location:</strong> {selectedService.location}
         </p>
-        {category === "Venue" && (
+        {category === "VENUE" && (
           <>
             <p>
               <strong>Capacity:</strong> {selectedService.capacity} people
@@ -171,11 +164,19 @@ const PendingServicesPage = () => {
               <strong>Price:</strong> ₱{selectedService.price}
             </p>
             <p>
-              <strong>Amenities:</strong> {selectedService.amenities?.join(", ") || "None"}
+              <strong>Amenities:</strong>{" "}
+              {(() => {
+                try {
+                  const amenities = JSON.parse(selectedService.amenities || "[]");
+                  return Array.isArray(amenities) ? amenities.join(", ") : selectedService.amenities || "None";
+                } catch {
+                  return selectedService.amenities || "None";
+                }
+              })()}
             </p>
           </>
         )}
-        {category === "Catering" && (
+        {category === "CATERING" && (
           <>
             <p>
               <strong>Maximum People:</strong> {selectedService.maxPeople} people
@@ -184,36 +185,30 @@ const PendingServicesPage = () => {
               <strong>Price Per Person:</strong> ₱{selectedService.pricePerPerson}
             </p>
             <p>
-              <strong>Cuisine Types:</strong> {selectedService.cuisineTypes?.join(", ") || "None"}
-            </p>
-            <p>
-              <strong>Menu Options:</strong> {selectedService.menuOptions || "None"}
+              <strong>Cuisine Type:</strong> {selectedService.cuisineType || "None"}
             </p>
           </>
         )}
-        {category === "Photographer" && (
+        {category === "PHOTOGRAPHER" && (
           <>
             <p>
-              <strong>Specialties:</strong> {selectedService.specialties?.join(", ") || "None"}
+              <strong>Style:</strong> {selectedService.style}
             </p>
             <p>
               <strong>Price Range:</strong> {selectedService.priceRange}
             </p>
             <p>
-              <strong>Packages:</strong> {selectedService.packages || "None"}
+              <strong>Experience:</strong> {selectedService.experienceYears} years
             </p>
           </>
         )}
-        {category === "Designer" && (
+        {category === "DESIGNER" && (
           <>
             <p>
-              <strong>Design Types:</strong> {selectedService.designTypes?.join(", ") || "None"}
+              <strong>Style:</strong> {selectedService.style}
             </p>
             <p>
               <strong>Price Range:</strong> {selectedService.priceRange}
-            </p>
-            <p>
-              <strong>Packages:</strong> {selectedService.packages || "None"}
             </p>
           </>
         )}
@@ -231,7 +226,14 @@ const PendingServicesPage = () => {
 
   return (
     <div className="pending-services-container" style={{ padding: 24 }}>
-      <Title level={2}>My Pending/Rejected Services</Title>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <Title level={2} style={{ margin: 0 }}>
+          My Pending/Rejected Services
+        </Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/provider/register-service")}>
+          Add New Service
+        </Button>
+      </div>
       <p>
         Manage all your registered services here. Services need to be approved by admin before they become visible to
         clients.
@@ -241,7 +243,7 @@ const PendingServicesPage = () => {
       </Card>
       <Modal
         title="Service Details"
-        visible={detailModalVisible}
+        open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
@@ -256,4 +258,4 @@ const PendingServicesPage = () => {
   );
 };
 
-export default PendingServicesPage;
+export default ProviderDashboard;
