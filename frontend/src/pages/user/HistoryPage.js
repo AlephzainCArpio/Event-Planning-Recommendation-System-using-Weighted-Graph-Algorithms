@@ -26,11 +26,52 @@ const HistoryPage = () => {
     }
   }, [activeTab])
 
+  const normalizeHistory = (entries) =>
+    entries.map((entry) => {
+      if (entry.venue) {
+        return {
+          id: entry.id,
+          serviceType: "venue",
+          serviceName: entry.venue.name,
+          serviceId: entry.venue.id,
+          viewedAt: entry.viewedAt,
+        };
+      }
+      if (entry.catering) {
+        return {
+          id: entry.id,
+          serviceType: "catering",
+          serviceName: entry.catering.name,
+          serviceId: entry.catering.id,
+          viewedAt: entry.viewedAt,
+        };
+      }
+      if (entry.photographer) {
+        return {
+          id: entry.id,
+          serviceType: "photographer",
+          serviceName: entry.photographer.name,
+          serviceId: entry.photographer.id,
+          viewedAt: entry.viewedAt,
+        };
+      }
+      if (entry.designer) {
+        return {
+          id: entry.id,
+          serviceType: "designer",
+          serviceName: entry.designer.name,
+          serviceId: entry.designer.id,
+          viewedAt: entry.viewedAt,
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
   const fetchViewHistory = async () => {
     try {
       setLoading(true)
       const response = await api.get("/api/users/history")
-      setViewHistory(response.data)
+      setViewHistory(normalizeHistory(response.data))
     } catch (error) {
       console.error("Error fetching view history:", error)
       message.error("Failed to load view history")
@@ -68,13 +109,13 @@ const HistoryPage = () => {
   const getServiceUrl = (type, id) => {
     switch (type) {
       case "venue":
-        return `/api/user/venues/${id}`
+        return `/user/venues/${id}`
       case "catering":
-        return `/api/user/catering/${id}`
+        return `/user/catering/${id}`
       case "photographer":
-        return `/api/user/photographers/${id}`
+        return `/user/photographers/${id}`
       case "designer":
-        return `/api/user/designers/${id}`
+        return `/user/designers/${id}`
       default:
         return "#"
     }
@@ -131,15 +172,11 @@ const HistoryPage = () => {
       key: "actions",
       render: (_, record) => (
         <Space>
-          <Button
-            type="primary"
-            size="small"
-            icon={<EyeOutlined />}
-            as={Link}
-            to={getServiceUrl(record.serviceType, record.serviceId)}
-          >
-            View
-          </Button>
+          <Link to={getServiceUrl(record.serviceType, record.serviceId)}>
+            <Button type="primary" size="small" icon={<EyeOutlined />}>
+              View
+            </Button>
+          </Link>
           <Button
             danger
             size="small"
