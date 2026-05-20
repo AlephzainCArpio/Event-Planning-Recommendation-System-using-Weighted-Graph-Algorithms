@@ -26,11 +26,19 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.use(bodyParser.json())
-// Serve static files from /uploads
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// Serve public upload folders only (verification docs require admin API)
+const uploadsRoot = path.join(__dirname, "../uploads");
+app.use("/uploads", (req, res, next) => {
+  const normalizedPath = req.path.replace(/\\/g, "/");
+  if (normalizedPath.startsWith("/verification") || normalizedPath.includes("/verification/")) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  next();
+}, express.static(uploadsRoot));
 
 // Ensure uploads subfolders exist
-const uploadDirs = ['venues', 'catering', 'photographers', 'designers'];
+const uploadDirs = ['venues', 'catering', 'photographers', 'designers', 'verification'];
 uploadDirs.forEach(dir => {
   const fullPath = path.join(__dirname, `../uploads/${dir}`);
   if (!fs.existsSync(fullPath)) {
