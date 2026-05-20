@@ -45,14 +45,13 @@ export function AuthProvider({ children }) {
       setError(null);
       
       const response = await api.post('/api/auth/login', { email, password });
-      const { token, user } = response.data;
-      
-      // Save token and set headers
+      const { token, ...userFields } = response.data;
+
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      setCurrentUser(user); 
-      console.log('User after login:', user);
+
+      const user = { ...userFields };
+      setCurrentUser(user);
       return user;
     } catch (err) {
       console.error('Login error details:', err);
@@ -69,12 +68,12 @@ export function AuthProvider({ children }) {
       setError(null);
       
       const response = await api.post('/api/auth/register', userData);
-      const { token, user } = response.data;
-      
-      // Save token and set headers
+      const { token, ...userFields } = response.data;
+
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
+      const user = { ...userFields };
       setCurrentUser(user);
       return user;
     } catch (err) {
